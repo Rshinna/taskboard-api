@@ -1,6 +1,7 @@
 package com.rshinna.taskboardapi.controller;
 
 import com.rshinna.taskboardapi.dto.user.CreateUserRequest;
+import com.rshinna.taskboardapi.dto.user.UserResponse;
 import com.rshinna.taskboardapi.entity.User;
 import com.rshinna.taskboardapi.service.UserService;
 import jakarta.validation.Valid;
@@ -17,8 +18,16 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@RequestBody @Valid CreateUserRequest request){
-        return userService.createUser(request);
-    }
+    public UserResponse createUser(@RequestBody @Valid CreateUserRequest request) {
 
+        User user = userService.createUser(request);
+
+        return new UserResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole(),
+                user.getCreatedAt()
+        );
+    }
 }

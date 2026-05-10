@@ -4,6 +4,7 @@ import com.rshinna.taskboardapi.dto.user.CreateUserRequest;
 import com.rshinna.taskboardapi.entity.User;
 import com.rshinna.taskboardapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
   private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
   public User createUser(CreateUserRequest request) {
 
@@ -22,7 +24,7 @@ public class UserService {
         User.builder()
             .name(request.name())
             .email(request.email())
-            .password(request.password())
+            .password(passwordEncoder.encode(request.password()))
             .role(request.role())
             .build();
 
