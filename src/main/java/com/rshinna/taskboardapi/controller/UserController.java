@@ -30,4 +30,9 @@ public class UserController {
                 user.getCreatedAt()
         );
     }
+
+    @GetMapping("/me")
+    public String me(){
+        return "autenticado";
+    }
 }
