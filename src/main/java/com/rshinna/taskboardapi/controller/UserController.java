@@ -7,6 +7,7 @@ import com.rshinna.taskboardapi.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,25 +15,27 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+  private final UserService userService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse createUser(@RequestBody @Valid CreateUserRequest request) {
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public UserResponse createUser(@RequestBody @Valid CreateUserRequest request) {
 
-        User user = userService.createUser(request);
+    User user = userService.createUser(request);
 
-        return new UserResponse(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getRole(),
-                user.getCreatedAt()
-        );
-    }
+    return new UserResponse(
+        user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getCreatedAt());
+  }
 
-    @GetMapping("/me")
-    public String me(){
-        return "autenticado";
-    }
+  @GetMapping("/me")
+  public UserResponse me(@AuthenticationPrincipal User user){
+
+    return new UserResponse(
+            user.getId(),
+            user.getName(),
+            user.getEmail(),
+            user.getRole(),
+            user.getCreatedAt()
+    );
+  }
 }
