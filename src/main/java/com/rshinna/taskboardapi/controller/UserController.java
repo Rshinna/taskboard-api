@@ -7,6 +7,7 @@ import com.rshinna.taskboardapi.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,5 +38,11 @@ public class UserController {
             user.getRole(),
             user.getCreatedAt()
     );
+  }
+
+  @PreAuthorize("hasRole('ADMIN')")
+  @GetMapping("/admin")
+  public String admin(){
+      return "área admin";
   }
 }
