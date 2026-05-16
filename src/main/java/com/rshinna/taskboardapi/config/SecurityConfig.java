@@ -1,5 +1,6 @@
 package com.rshinna.taskboardapi.config;
 
+import com.rshinna.taskboardapi.auth.security.CustomAuthenticationEntryPoint;
 import com.rshinna.taskboardapi.auth.security.CustomUserDetailsService;
 import com.rshinna.taskboardapi.auth.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class SecurityConfig {
 
   private final CustomUserDetailsService customUserDetailsService;
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -29,6 +31,7 @@ public class SecurityConfig {
     http.csrf(csrf -> csrf.disable())
         .formLogin(form -> form.disable())
         .httpBasic(basic -> basic.disable())
+        .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(

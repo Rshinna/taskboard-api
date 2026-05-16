@@ -2,6 +2,7 @@ package com.rshinna.taskboardapi.service;
 
 import com.rshinna.taskboardapi.dto.user.CreateUserRequest;
 import com.rshinna.taskboardapi.entity.User;
+import com.rshinna.taskboardapi.exception.EmailAlreadyExistsException;
 import com.rshinna.taskboardapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,8 +17,8 @@ public class UserService {
 
   public User createUser(CreateUserRequest request) {
 
-    if (userRepository.existsByEmail(request.email())) {
-      throw new RuntimeException("Email already registered");
+    if (userRepository.findByEmail(request.email()).isPresent()) {
+      throw new EmailAlreadyExistsException("Email already registered");
     }
 
     User user =
