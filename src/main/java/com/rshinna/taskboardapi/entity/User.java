@@ -1,11 +1,28 @@
 package com.rshinna.taskboardapi.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,6 +58,9 @@ public class User implements UserDetails {
   @Column(nullable = false)
   private LocalDateTime updatedAt;
 
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private List<Task> tasks = new ArrayList<>();
+
   @PrePersist
   public void prePersist() {
     this.createdAt = LocalDateTime.now();
@@ -53,35 +73,32 @@ public class User implements UserDetails {
   }
 
   @Override
-  public Collection<? extends GrantedAuthority> getAuthorities(){
-    return List.of(
-            new SimpleGrantedAuthority("ROLE_" + role.name())
-    );
+  public Collection<? extends GrantedAuthority> getAuthorities() {
+    return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
   }
 
   @Override
-  public String getUsername(){
+  public String getUsername() {
     return email;
   }
 
   @Override
-  public boolean isAccountNonExpired(){
+  public boolean isAccountNonExpired() {
     return true;
   }
 
   @Override
-  public boolean isAccountNonLocked(){
+  public boolean isAccountNonLocked() {
     return true;
   }
 
   @Override
-  public boolean isCredentialsNonExpired(){
+  public boolean isCredentialsNonExpired() {
     return true;
   }
 
   @Override
-  public boolean isEnabled(){
+  public boolean isEnabled() {
     return true;
   }
-
 }

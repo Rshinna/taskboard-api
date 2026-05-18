@@ -59,4 +59,10 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(new ErrorResponse(LocalDateTime.now(), 409, "Conflict", ex.getMessage()));
   }
+
+  @ExceptionHandler(ResourceNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse(LocalDateTime.now(), 404, "Not Found", ex.getMessage()));
+  }
 }
