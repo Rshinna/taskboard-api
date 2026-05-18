@@ -4,6 +4,7 @@ import com.rshinna.taskboardapi.dto.user.CreateUserRequest;
 import com.rshinna.taskboardapi.dto.user.UserResponse;
 import com.rshinna.taskboardapi.entity.User;
 import com.rshinna.taskboardapi.service.UserService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
   private final UserService userService;
@@ -29,20 +31,15 @@ public class UserController {
   }
 
   @GetMapping("/me")
-  public UserResponse me(@AuthenticationPrincipal User user){
+  public UserResponse me(@AuthenticationPrincipal User user) {
 
     return new UserResponse(
-            user.getId(),
-            user.getName(),
-            user.getEmail(),
-            user.getRole(),
-            user.getCreatedAt()
-    );
+        user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getCreatedAt());
   }
 
   @PreAuthorize("hasRole('ADMIN')")
   @GetMapping("/admin")
-  public String admin(){
-      return "área admin";
+  public String admin() {
+    return "área admin";
   }
 }
