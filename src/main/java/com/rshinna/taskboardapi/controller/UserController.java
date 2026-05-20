@@ -10,8 +10,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -55,5 +57,18 @@ public class UserController {
   @PreAuthorize("hasRole('ADMIN')")
   public String admin() {
     return "área admin";
+  }
+
+  @Operation(summary = "Promover usuário", description = "Promove um usuário para ADMIN")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Usuário promovido com sucesso"),
+    @ApiResponse(responseCode = "403", description = "Acesso negado"),
+    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+  })
+  @SecurityRequirement(name = "bearerAuth")
+  @PreAuthorize("hasRole('ADMIN')")
+  @PatchMapping("/{id}/promote")
+  public ResponseEntity<UserResponse> promoteUser(@PathVariable UUID id) {
+    return ResponseEntity.ok(userService.promoteUser(id));
   }
 }
