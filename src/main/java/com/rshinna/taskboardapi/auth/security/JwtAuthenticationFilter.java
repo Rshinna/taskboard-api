@@ -13,6 +13,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.jsonwebtoken.JwtException;
+
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -32,6 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
 
+    try {
+
     String token = authHeader.substring(7);
 
     String email = jwtService.extractEmail(token);
@@ -50,6 +54,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
       }
+    }
+    } catch(JwtException | IllegalArgumentException e){
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        return;
     }
 
     filterChain.doFilter(request, response);

@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rshinna.taskboardapi.dto.task.CreateTaskRequest;
+import com.rshinna.taskboardapi.dto.task.UpdateTaskRequest;
+import com.rshinna.taskboardapi.entity.TaskStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -407,5 +409,301 @@ public class TaskControllerIntegrationTest {
     mockMvc
         .perform(get("/tasks/" + taskId).header("Authorization", "Bearer " + token))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void shouldNotAllowUserToAccessTaskFromAnotherUser() throws Exception {
+
+    String userA =
+        """
+        {
+          "name": "Rodrigo",
+          "email": "rodrigoA@test.com",
+          "password": "123456",
+          "role": "USER"
+        }
+        """;
+
+    mockMvc
+        .perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(userA))
+        .andExpect(status().isCreated());
+
+    String loginA =
+        """
+        {
+          "email": "rodrigoA@test.com",
+          "password": "123456"
+        }
+        """;
+
+    String responseA =
+        mockMvc
+            .perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginA))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    String tokenA = objectMapper.readTree(responseA).get("token").asText();
+
+    CreateTaskRequest taskRequest = new CreateTaskRequest("Task privada", "Somente dono acessa");
+
+    String createdTaskResponse =
+        mockMvc
+            .perform(
+                post("/tasks")
+                    .header("Authorization", "Bearer " + tokenA)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(taskRequest)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    String taskId = objectMapper.readTree(createdTaskResponse).get("id").asText();
+
+    String userB =
+        """
+        {
+          "name": "Maria",
+          "email": "maria@test.com",
+          "password": "123456",
+          "role": "USER"
+        }
+        """;
+
+    mockMvc
+        .perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(userB))
+        .andExpect(status().isCreated());
+
+    String loginB =
+        """
+        {
+          "email": "maria@test.com",
+          "password": "123456"
+        }
+        """;
+
+    String responseB =
+        mockMvc
+            .perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginB))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    String tokenB = objectMapper.readTree(responseB).get("token").asText();
+
+    mockMvc
+        .perform(get("/tasks/" + taskId).header("Authorization", "Bearer " + tokenB))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void shouldNotAllowUserToUpdateAnotherUserTask() throws Exception {
+
+    String userA =
+        """
+        {
+        "name": "Rodrigo",
+        "email": "rodrigo@test.com",
+        "password": "123456",
+        "role": "USER"
+        }
+        """;
+
+    mockMvc
+        .perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(userA))
+        .andExpect(status().isCreated());
+
+    String userB =
+        """
+        {
+        "name": "Maria",
+        "email": "maria@test.com",
+        "password": "123456",
+        "role": "USER"
+        }
+        """;
+
+    mockMvc
+        .perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(userB))
+        .andExpect(status().isCreated());
+
+    String loginA =
+        """
+            {
+                "email": "rodrigo@test.com",
+                "password": "123456"
+            }
+        """;
+
+    String responseA =
+        mockMvc
+            .perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginA))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    String tokenA = objectMapper.readTree(responseA).get("token").asText();
+
+    String loginB =
+        """
+            {
+                "email": "maria@test.com",
+                "password": "123456"
+            }
+        """;
+
+    String responseB =
+        mockMvc
+            .perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginB))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    String tokenB = objectMapper.readTree(responseB).get("token").asText();
+
+    CreateTaskRequest createTaskRequest =
+        new CreateTaskRequest("Task privada", "Somente Rodrigo pode editar");
+
+    String taskResponse =
+        mockMvc
+            .perform(
+                post("/tasks")
+                    .header("Authorization", "Bearer " + tokenA)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(createTaskRequest)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    String taskId = objectMapper.readTree(taskResponse).get("id").asText();
+
+    UpdateTaskRequest updateTaskRequest =
+        new UpdateTaskRequest("hackeada", "Maria tentou editar", TaskStatus.COMPLETED);
+
+    mockMvc
+        .perform(
+            put("/tasks/" + taskId)
+                .header("Authorization", "Bearer " + tokenB)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateTaskRequest)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void shouldNotAllowUserToDeleteAnotherUserTask() throws Exception {
+
+    String userA =
+        """
+        {
+          "name": "Rodrigo",
+          "email": "rodrigo@test.com",
+          "password": "123456",
+          "role": "USER"
+        }
+        """;
+
+    mockMvc
+        .perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(userA))
+        .andExpect(status().isCreated());
+
+    String userB =
+        """
+        {
+          "name": "Maria",
+          "email": "maria@test.com",
+          "password": "123456",
+          "role": "USER"
+        }
+        """;
+
+    mockMvc
+        .perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(userB))
+        .andExpect(status().isCreated());
+
+    String loginA =
+        """
+        {
+          "email": "rodrigo@test.com",
+          "password": "123456"
+        }
+        """;
+
+    String responseA =
+        mockMvc
+            .perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginA))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    String tokenA = objectMapper.readTree(responseA).get("token").asText();
+
+    String loginB =
+        """
+        {
+          "email": "maria@test.com",
+          "password": "123456"
+        }
+        """;
+
+    String responseB =
+        mockMvc
+            .perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginB))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    String tokenB = objectMapper.readTree(responseB).get("token").asText();
+
+    CreateTaskRequest taskRequest = new CreateTaskRequest("Task privada", "Somente dono deleta");
+
+    String taskResponse =
+        mockMvc
+            .perform(
+                post("/tasks")
+                    .header("Authorization", "Bearer " + tokenA)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(taskRequest)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    String taskId = objectMapper.readTree(taskResponse).get("id").asText();
+
+    mockMvc
+        .perform(delete("/tasks/" + taskId).header("Authorization", "Bearer " + tokenB))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void shouldReturnUnauthorizedWhenLoginIsInvalid() throws Exception {
+
+    String loginRequest =
+        """
+        {
+          "email": "invalido@test.com",
+          "password": "123456"
+        }
+        """;
+
+    mockMvc
+        .perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginRequest))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void shouldReturnUnauthorizedWithInvalidToken() throws Exception {
+
+    mockMvc
+        .perform(get("/tasks").header("Authorization", "Bearer token-falso"))
+        .andExpect(status().isUnauthorized());
   }
 }
