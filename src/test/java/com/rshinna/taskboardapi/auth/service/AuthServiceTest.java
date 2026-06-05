@@ -1,4 +1,4 @@
-package com.rshinna.taskboardapi.service;
+package com.rshinna.taskboardapi.auth.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import com.rshinna.taskboardapi.auth.dto.LoginRequestDTO;
 import com.rshinna.taskboardapi.auth.dto.LoginResponseDTO;
 import com.rshinna.taskboardapi.auth.security.JwtService;
-import com.rshinna.taskboardapi.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
