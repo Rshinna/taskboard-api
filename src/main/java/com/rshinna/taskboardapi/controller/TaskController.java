@@ -56,7 +56,7 @@ public class TaskController {
   }
 
   @Operation(
-      summary = "Buscar para tarefa por ID",
+      summary = "Buscar tarefa por ID",
       description = "Retorna uma tarefa específica do usuário autenticado")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Tarefa encontrada"),
