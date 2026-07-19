@@ -58,9 +58,14 @@ src/main/java/com/rshinna/taskboardapi
 
 ### Usuários
 
-| Método | Endpoint | Descrição |
-|----------|----------|----------|
-| POST | `/users` | Criar usuário |
+| Método | Endpoint | Descrição | Acesso |
+|----------|----------|----------|----------|
+| POST | `/users` | Criar usuário | Público |
+| GET | `/users/me` | Dados do usuário autenticado | Autenticado |
+| GET | `/users/admin` | Endpoint de exemplo restrito a admins | Somente ADMIN |
+| PATCH | `/users/{id}/promote` | Promove um usuário para ADMIN | Somente ADMIN |
+
+O projeto implementa controle de acesso baseado em papéis (RBAC), com duas roles: `USER` (padrão, atribuída automaticamente no cadastro) e `ADMIN` (atribuída apenas via `/users/{id}/promote`, por um usuário já admin).
 
 ### Autenticação
 
@@ -113,6 +118,11 @@ $env:JWT_SECRET="minha-chave-super-secreta"
 
 ---
 ## 📦 Pré-requisitos
+
+**Opção A — com Docker (recomendado):**
+- Docker e Docker Compose
+
+**Opção B — execução local sem Docker:**
 - Java 21 ou superior
 - Maven 3.8 ou superior
 - PostgreSQL
@@ -126,13 +136,32 @@ git clone https://github.com/Rshinna/taskboard-api.git
 cd taskboard-api
 ```
 
-### Execute a aplicação
+### Opção A — com Docker (recomendado)
+
+Sobe o Postgres e a aplicação juntos, sem precisar instalar Java, Maven ou Postgres na máquina:
+
+```bash
+docker compose up --build
+```
+
+Pra derrubar:
+
+```bash
+docker compose down          # mantém os dados do banco
+docker compose down -v       # remove também o volume do banco
+```
+
+### Opção B — execução local sem Docker
+
+Configure as variáveis de ambiente (ver seção [Configuração](#️-configuração)) e execute:
 
 ```bash
 mvn spring-boot:run
 ```
 
-A aplicação ficará disponível em:
+### Acessando a aplicação
+
+Em qualquer uma das opções, a aplicação ficará disponível em:
 
 ```text
 http://localhost:8080
@@ -181,6 +210,8 @@ Authorization: Bearer <token>
 
 Cada usuário possui acesso apenas às suas próprias tarefas.
 
+O acesso a endpoints administrativos é controlado via `@PreAuthorize`, com base na role do usuário autenticado (`USER` ou `ADMIN`). Por padrão, todo usuário nasce com role `USER`; a promoção a `ADMIN` só ocorre através do endpoint `/users/{id}/promote`, restrito a administradores.
+
 ---
 
 ## 📋 Testes
@@ -199,7 +230,7 @@ Cada usuário possui acesso apenas às suas próprias tarefas.
 
 ## 🎯 Próximos Passos
 
-- [ ] Docker
+- [x] Docker
 - [ ] GitHub Actions (CI/CD)
 - [ ] Paginação de tarefas
 - [ ] Filtro por status
