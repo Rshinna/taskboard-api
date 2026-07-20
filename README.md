@@ -4,6 +4,7 @@
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-green)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
 ![JWT](https://img.shields.io/badge/Auth-JWT-red)
+[![CI](https://github.com/Rshinna/taskboard-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Rshinna/taskboard-api/actions/workflows/ci.yml)
 
 API REST para gerenciamento de tarefas com autenticação JWT, desenvolvida com Java e Spring Boot.
 
