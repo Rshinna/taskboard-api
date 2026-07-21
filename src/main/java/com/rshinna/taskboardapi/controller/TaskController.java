@@ -11,9 +11,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,9 +53,10 @@ public class TaskController {
     @ApiResponse(responseCode = "401", description = "Token inválido")
   })
   @GetMapping
-  public List<TaskResponse> listTasks() {
+  public Page<TaskResponse> listTasks(
+          @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-    return taskService.listTasks().stream().map(this::mapToResponse).toList();
+    return taskService.listTasks(pageable).map(this::mapToResponse);
   }
 
   @Operation(

@@ -111,9 +111,11 @@ public class TaskControllerIntegrationTest {
         mockMvc
                 .perform(get("/tasks").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Estudar Spring"))
-                .andExpect(jsonPath("$[0].description").value("Aprender testes de integração"))
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
+                .andExpect(jsonPath("$.content[0].title").value("Estudar Spring"))
+                .andExpect(jsonPath("$.content[0].description").value("Aprender testes de integração"))
+                .andExpect(jsonPath("$.content[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
     }
 
     @Test

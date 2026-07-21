@@ -232,8 +232,8 @@ O acesso a endpoints administrativos é controlado via `@PreAuthorize`, com base
 ## 🎯 Próximos Passos
 
 - [x] Docker
-- [ ] GitHub Actions (CI/CD)
-- [ ] Paginação de tarefas
+- [x] GitHub Actions (CI/CD)
+- [x] Paginação de tarefas
 - [ ] Filtro por status
 - [ ] Cobertura de testes ampliada
 - [ ] Deploy em ambiente cloud

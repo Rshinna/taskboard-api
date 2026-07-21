@@ -8,9 +8,10 @@ import com.rshinna.taskboardapi.entity.User;
 import com.rshinna.taskboardapi.exception.ResourceNotFoundException;
 import com.rshinna.taskboardapi.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -35,10 +36,10 @@ public class TaskService {
 
     }
 
-    public List<Task> listTasks(){
+    public Page<Task> listTasks(Pageable pageable){
 
         User user = authenticatedUserService.getAuthenticatedUser();
-        return taskRepository.findAllByUser(user);
+        return taskRepository.findAllByUser(user, pageable);
     }
 
     public Task getTaskById(UUID id){

@@ -23,6 +23,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
@@ -69,17 +75,20 @@ class TaskServiceTest {
 
     List<Task> tasks = List.of(task1, task2);
 
+    Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+    Page<Task> taskPage = new PageImpl<>(tasks, pageable, tasks.size());
+
     when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
-    when(taskRepository.findAllByUser(user)).thenReturn(tasks);
+    when(taskRepository.findAllByUser(user, pageable)).thenReturn(taskPage);
 
-    List<Task> result = taskService.listTasks();
+    Page<Task> result = taskService.listTasks(pageable);
 
-    assertEquals(2, result.size());
-    assertEquals("Estudar Mockito", result.get(0).getTitle());
-    assertEquals("Estudar Junit", result.get(1).getTitle());
+    assertEquals(2, result.getContent().size());
+    assertEquals("Estudar Mockito", result.getContent().get(0).getTitle());
+    assertEquals("Estudar Junit", result.getContent().get(1).getTitle());
 
     verify(authenticatedUserService).getAuthenticatedUser();
-    verify(taskRepository).findAllByUser(user);
+    verify(taskRepository).findAllByUser(user,pageable);
   }
 
   @Test
