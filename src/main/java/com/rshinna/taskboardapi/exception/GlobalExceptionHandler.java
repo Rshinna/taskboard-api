@@ -12,11 +12,16 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+    log.warn("Bad credentials attempt: {}", ex.getMessage()); 
+
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
         .body(
             new ErrorResponse(
@@ -28,6 +33,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+    log.warn("Access Denied: {}", ex.getMessage());
+
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
         .body(
             new ErrorResponse(
@@ -39,6 +46,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(EmailAlreadyExistsException.class)
   public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+    log.warn("Email already exists: {}", ex.getMessage());
+
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(
             new ErrorResponse(
@@ -51,6 +60,8 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
       ResourceNotFoundException ex) {
+    log.warn("Resource not found: {}", ex.getMessage());
+
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(
             new ErrorResponse(
@@ -69,6 +80,8 @@ public class GlobalExceptionHandler {
                 Collectors.toMap(
                     FieldError::getField, FieldError::getDefaultMessage, (msg1, msg2) -> msg1));
 
+    log.warn("Method argument not valid: {}", ex.getMessage());
+
     return ResponseEntity.badRequest()
         .body(
             new ValidationErrorResponse(
@@ -80,6 +93,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+    log.error("Internal server error: {}", ex.getMessage(), ex);
+
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(
             new ErrorResponse(
