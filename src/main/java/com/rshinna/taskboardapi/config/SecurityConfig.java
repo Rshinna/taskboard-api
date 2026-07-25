@@ -3,6 +3,7 @@ package com.rshinna.taskboardapi.config;
 import com.rshinna.taskboardapi.auth.security.CustomAuthenticationEntryPoint;
 import com.rshinna.taskboardapi.auth.security.CustomUserDetailsService;
 import com.rshinna.taskboardapi.auth.security.JwtAuthenticationFilter;
+import com.rshinna.taskboardapi.auth.security.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,8 +26,9 @@ public class SecurityConfig {
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
+
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http, RateLimitFilter rateLimitFilter) throws Exception {
 
     http.csrf(csrf -> csrf.disable())
         .formLogin(form -> form.disable())
@@ -45,7 +47,8 @@ public class SecurityConfig {
                     .anyRequest()
                     .authenticated())
         .userDetailsService(customUserDetailsService)
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
@@ -59,5 +62,10 @@ public class SecurityConfig {
   public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
       throws Exception {
     return config.getAuthenticationManager();
+  }
+
+  @Bean
+  public RateLimitFilter rateLimitFilter() {
+    return new RateLimitFilter();
   }
 }
