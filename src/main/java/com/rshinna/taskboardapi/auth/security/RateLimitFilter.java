@@ -13,6 +13,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -20,6 +21,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class RateLimitFilter extends OncePerRequestFilter {
 
   private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+  @Value("${app.rate-limit.enabled:true}")
+  private boolean rateLimitEnabled;
 
   private Bucket createNewBucket() {
     return Bucket.builder()
@@ -30,6 +33,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    if (!rateLimitEnabled) {
+      filterChain.doFilter(request, response);
+      return;
+    }
 
     if (!request.getMethod().equals("POST") ||
             !request.getRequestURI().equals("/auth/login")) {
