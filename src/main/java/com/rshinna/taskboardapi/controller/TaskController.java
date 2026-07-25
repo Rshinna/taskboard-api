@@ -4,6 +4,7 @@ import com.rshinna.taskboardapi.dto.task.CreateTaskRequest;
 import com.rshinna.taskboardapi.dto.task.TaskResponse;
 import com.rshinna.taskboardapi.dto.task.UpdateTaskRequest;
 import com.rshinna.taskboardapi.entity.Task;
+import com.rshinna.taskboardapi.entity.TaskStatus;
 import com.rshinna.taskboardapi.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -54,9 +55,10 @@ public class TaskController {
   })
   @GetMapping
   public Page<TaskResponse> listTasks(
-          @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+          @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+          @RequestParam(required = false) TaskStatus status) {
 
-    return taskService.listTasks(pageable).map(this::mapToResponse);
+    return taskService.listTasks(pageable, status).map(this::mapToResponse);
   }
 
   @Operation(

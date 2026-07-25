@@ -4,6 +4,7 @@ import com.rshinna.taskboardapi.auth.service.AuthenticatedUserService;
 import com.rshinna.taskboardapi.dto.task.CreateTaskRequest;
 import com.rshinna.taskboardapi.dto.task.UpdateTaskRequest;
 import com.rshinna.taskboardapi.entity.Task;
+import com.rshinna.taskboardapi.entity.TaskStatus;
 import com.rshinna.taskboardapi.entity.User;
 import com.rshinna.taskboardapi.exception.ResourceNotFoundException;
 import com.rshinna.taskboardapi.repository.TaskRepository;
@@ -36,10 +37,16 @@ public class TaskService {
 
     }
 
-    public Page<Task> listTasks(Pageable pageable){
+    public Page<Task> listTasks(Pageable pageable, TaskStatus status){
 
         User user = authenticatedUserService.getAuthenticatedUser();
-        return taskRepository.findAllByUser(user, pageable);
+        if(status != null) {
+            return taskRepository.findAllByUserAndStatus(user, status, pageable);
+
+        } else {
+
+            return taskRepository.findAllByUser(user, pageable);
+        }
     }
 
     public Task getTaskById(UUID id){

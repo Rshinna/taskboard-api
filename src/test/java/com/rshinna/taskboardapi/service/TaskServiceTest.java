@@ -81,7 +81,7 @@ class TaskServiceTest {
     when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
     when(taskRepository.findAllByUser(user, pageable)).thenReturn(taskPage);
 
-    Page<Task> result = taskService.listTasks(pageable);
+    Page<Task> result = taskService.listTasks(pageable, null);
 
     assertEquals(2, result.getContent().size());
     assertEquals("Estudar Mockito", result.getContent().get(0).getTitle());
@@ -109,6 +109,33 @@ class TaskServiceTest {
 
     verify(authenticatedUserService).getAuthenticatedUser();
     verify(taskRepository).findByIdAndUser(taskId, user);
+  }
+
+  @Test
+  void shouldListTasksFilteredByStatus() {
+    User user = User.builder().id(UUID.randomUUID()).email("rodrigo@test.com").build();
+
+    Task task1 =
+            Task.builder().title("Estudar Mockito").description("Aprender mocks").user(user).build();
+    Task task2 =
+            Task.builder().title("Estudar Junit").description("Aprender asserts").user(user).build();
+
+    List<Task> tasks = List.of(task1, task2);
+
+    Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+    Page<Task> taskPage = new PageImpl<>(tasks, pageable, tasks.size());
+
+    when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+    when(taskRepository.findAllByUserAndStatus(user, TaskStatus.PENDING, pageable)).thenReturn(taskPage);
+
+    Page<Task> result = taskService.listTasks(pageable, TaskStatus.PENDING);
+
+    assertEquals(2, result.getContent().size());
+    assertEquals("Estudar Mockito", result.getContent().get(0).getTitle());
+    assertEquals("Estudar Junit", result.getContent().get(1).getTitle());
+
+    verify(authenticatedUserService).getAuthenticatedUser();
+    verify(taskRepository).findAllByUserAndStatus(user,TaskStatus.PENDING, pageable);
   }
 
   @Test
