@@ -119,6 +119,52 @@ public class TaskControllerIntegrationTest {
     }
 
     @Test
+    void shouldListTasksFilteredByStatus()throws Exception{
+
+        createUser("Rodrigo", "rodrigo@test.com");
+
+        String token = loginAndGetToken("rodrigo@test.com");
+
+        String task1 = createTask(token, "Estudar Spring", "Aprender testes de integração");
+        String task2 = createTask(token, "Entender testes", "Apĺicar testes ");
+
+        String updateRequest =
+                """
+                        {
+                            "title": "Entender testes atualizada",
+                            "description": "Descrição atualizada",
+                            "status": "IN_PROGRESS"
+                        }
+                        """;
+
+        mockMvc.perform(put("/tasks/" + task2)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateRequest))
+                .andExpect(status().isOk());
+
+        mockMvc
+                .perform(get("/tasks?status=PENDING").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(task1))
+                .andExpect(jsonPath("$.content[0].title").value("Estudar Spring"))
+                .andExpect(jsonPath("$.content[0].description").value("Aprender testes de integração"))
+                .andExpect(jsonPath("$.content[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
+
+        mockMvc
+                .perform(get("/tasks?status=IN_PROGRESS").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(task2))
+                .andExpect(jsonPath("$.content[0].title").value("Entender testes atualizada"))
+                .andExpect(jsonPath("$.content[0].description").value("Descrição atualizada"))
+                .andExpect(jsonPath("$.content[0].status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
     void shouldGetTaskByIdSuccessfully() throws Exception {
 
         createUser("Rodrigo", "rodrigo@test.com");
