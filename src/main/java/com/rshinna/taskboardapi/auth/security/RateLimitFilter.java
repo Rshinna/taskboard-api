@@ -22,7 +22,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
   private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
   @Value("${app.rate-limit.enabled:true}")
-  private boolean rateLimitEnabled;
+  private boolean rateLimitEnabled = true;
 
   private Bucket createNewBucket() {
     return Bucket.builder()
