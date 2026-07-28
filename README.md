@@ -8,33 +8,47 @@
 
 API REST para gerenciamento de tarefas com autenticação JWT, desenvolvida com Java e Spring Boot.
 
-O projeto foi desenvolvido com foco em boas práticas de desenvolvimento backend, incluindo autenticação baseada em JWT, arquitetura em camadas, testes automatizados e documentação de API.
+O projeto foi desenvolvido com foco em boas práticas de desenvolvimento backend, incluindo autenticação baseada em JWT, controle de acesso por roles (RBAC), proteção contra força bruta, migrações de banco versionadas, paginação, testes automatizados e documentação de API.
 
-##  ✅ Funcionalidades Implementadas
+---
+
+## ✅ Funcionalidades Implementadas
 
 - [x] Cadastro de usuários
 - [x] Autenticação com JWT
+- [x] Controle de acesso baseado em roles (RBAC)
 - [x] CRUD completo de tarefas
+- [x] Paginação e ordenação de tarefas
+- [x] Filtro de tarefas por status
 - [x] Isolamento de tarefas por usuário
 - [x] Validação de dados
-- [x] Tratamento global de exceções
+- [x] Tratamento global de exceções com logging estruturado
+- [x] Proteção contra força bruta no login (Rate Limiting)
+- [x] Migrações de banco versionadas com Flyway
 - [x] Documentação com Swagger/OpenAPI
-- [x] Testes unitários
-- [x] Testes de integração
+- [x] Testes unitários e de integração (48 testes)
+- [x] CI/CD com GitHub Actions
+- [x] Docker e Docker Compose
+
+---
 
 ## 🛠 Tecnologias
 
 - Java 21
 - Spring Boot 3
 - Spring Security
-- JWT
+- JWT (jjwt)
 - Spring Data JPA
 - PostgreSQL
+- Flyway
+- Bucket4j (Rate Limiting)
 - H2 Database (testes)
 - JUnit 5
 - Mockito
 - Maven
+- Docker / Docker Compose
 - Swagger / OpenAPI
+- GitHub Actions
 
 ---
 
@@ -43,6 +57,10 @@ O projeto foi desenvolvido com foco em boas práticas de desenvolvimento backend
 ```text
 src/main/java/com/rshinna/taskboardapi
 ├── auth
+│   ├── controller
+│   ├── dto
+│   ├── security
+│   └── service
 ├── config
 ├── controller
 ├── dto
@@ -60,31 +78,43 @@ src/main/java/com/rshinna/taskboardapi
 ### Usuários
 
 | Método | Endpoint | Descrição | Acesso |
-|----------|----------|----------|----------|
+|--------|----------|-----------|--------|
 | POST | `/users` | Criar usuário | Público |
 | GET | `/users/me` | Dados do usuário autenticado | Autenticado |
-| GET | `/users/admin` | Endpoint de exemplo restrito a admins | Somente ADMIN |
+| GET | `/users/admin` | Endpoint restrito a admins | Somente ADMIN |
 | PATCH | `/users/{id}/promote` | Promove um usuário para ADMIN | Somente ADMIN |
 
 O projeto implementa controle de acesso baseado em papéis (RBAC), com duas roles: `USER` (padrão, atribuída automaticamente no cadastro) e `ADMIN` (atribuída apenas via `/users/{id}/promote`, por um usuário já admin).
 
 ### Autenticação
 
-| Método | Endpoint | Descrição |
-|----------|----------|----------|
-| POST | `/auth/login` | Realizar login |
+| Método | Endpoint | Descrição | Acesso |
+|--------|----------|-----------|--------|
+| POST | `/auth/login` | Realizar login | Público |
+
+O endpoint de login possui proteção contra força bruta: máximo de **5 tentativas por IP a cada 1 minuto**. Após isso, retorna `429 Too Many Requests`.
 
 ### Tarefas
 
-| Método | Endpoint | Descrição |
-|----------|----------|----------|
-| POST | `/tasks` | Criar tarefa |
-| GET | `/tasks` | Listar tarefas do usuário |
-| GET | `/tasks/{id}` | Buscar tarefa por ID |
-| PUT | `/tasks/{id}` | Atualizar tarefa |
-| DELETE | `/tasks/{id}` | Remover tarefa |
+| Método | Endpoint | Descrição | Acesso |
+|--------|----------|-----------|--------|
+| POST | `/tasks` | Criar tarefa | Autenticado |
+| GET | `/tasks` | Listar tarefas do usuário | Autenticado |
+| GET | `/tasks/{id}` | Buscar tarefa por ID | Autenticado |
+| PUT | `/tasks/{id}` | Atualizar tarefa | Autenticado |
+| DELETE | `/tasks/{id}` | Remover tarefa | Autenticado |
 
-Todos os endpoints de tarefas exigem autenticação JWT.
+Todos os endpoints de tarefas exigem autenticação JWT. Cada usuário acessa apenas suas próprias tarefas.
+
+#### Paginação e filtros
+
+```
+GET /tasks?page=0&size=10&sort=createdAt,desc
+GET /tasks?status=PENDING
+GET /tasks?status=IN_PROGRESS&page=0&size=5
+```
+
+Valores de status disponíveis: `PENDING`, `IN_PROGRESS`, `COMPLETED`.
 
 ---
 
@@ -118,6 +148,7 @@ $env:JWT_SECRET="minha-chave-super-secreta"
 ```
 
 ---
+
 ## 📦 Pré-requisitos
 
 **Opção A — com Docker (recomendado):**
@@ -127,6 +158,8 @@ $env:JWT_SECRET="minha-chave-super-secreta"
 - Java 21 ou superior
 - Maven 3.8 ou superior
 - PostgreSQL
+
+---
 
 ## ▶️ Executando Localmente
 
@@ -186,6 +219,32 @@ mvn test -Dtest=TaskServiceTest
 
 ---
 
+## 📋 Testes
+
+O projeto conta com **48 testes automatizados**, cobrindo as camadas de serviço, segurança e integração.
+
+### Testes Unitários
+
+| Classe | Cobertura |
+|--------|-----------|
+| `TaskServiceTest` | CRUD de tarefas, paginação, filtro por status |
+| `UserServiceTest` | Cadastro, promoção, prevenção de escalação de privilégio |
+| `AuthServiceTest` | Autenticação, credenciais inválidas |
+| `JwtServiceTest` | Geração, validação e extração de token |
+| `AuthenticatedUserServiceTest` | Recuperação do usuário autenticado |
+| `CustomUserDetailsServiceTest` | Carregamento de usuário por email |
+| `RateLimitFilterTest` | Limite de tentativas e bloqueio por IP |
+
+### Testes de Integração
+
+| Classe | Cobertura |
+|--------|-----------|
+| `TaskControllerIntegrationTest` | Fluxo completo de tasks, autenticação, isolamento entre usuários, filtro por status |
+| `GlobalExceptionHandlerTest` | Respostas 404, 403 e 400 |
+| `AuthControllerTest` | Login com sucesso e credenciais inválidas |
+
+---
+
 ## 📚 Swagger
 
 Após iniciar a aplicação:
@@ -196,36 +255,26 @@ http://localhost:8080/swagger-ui/index.html
 
 ![Swagger](docs/swagger.png)
 
-
 ---
 
 ## 🔐 Segurança
 
-A autenticação é baseada em JWT.
-
-Exemplo de header:
+A autenticação é baseada em JWT. Exemplo de header:
 
 ```http
 Authorization: Bearer <token>
 ```
 
-Cada usuário possui acesso apenas às suas próprias tarefas.
-
-O acesso a endpoints administrativos é controlado via `@PreAuthorize`, com base na role do usuário autenticado (`USER` ou `ADMIN`). Por padrão, todo usuário nasce com role `USER`; a promoção a `ADMIN` só ocorre através do endpoint `/users/{id}/promote`, restrito a administradores.
+- Cada usuário acessa apenas suas próprias tarefas (prevenção de IDOR)
+- O acesso a endpoints administrativos é controlado via `@PreAuthorize` com base na role (`USER` ou `ADMIN`)
+- Todo usuário nasce com role `USER`; a promoção a `ADMIN` ocorre apenas via `/users/{id}/promote`, restrito a administradores
+- O endpoint de login possui rate limiting: 5 tentativas por IP por minuto, com resposta `429` após exceder o limite
 
 ---
 
-## 📋 Testes
+## 🗄 Banco de Dados
 
-### Testes Unitários
-
-- AuthServiceTest
-- AuthenticatedUserServiceTest
-- TaskServiceTest
-
-### Testes de Integração
-
-- TaskControllerIntegrationTest
+O schema é versionado com **Flyway** — cada mudança de estrutura é registrada como uma migração numerada em `src/main/resources/db/migration/`, garantindo rastreabilidade e reprodutibilidade em qualquer ambiente.
 
 ---
 
@@ -234,8 +283,10 @@ O acesso a endpoints administrativos é controlado via `@PreAuthorize`, com base
 - [x] Docker
 - [x] GitHub Actions (CI/CD)
 - [x] Paginação de tarefas
-- [ ] Filtro por status
-- [ ] Cobertura de testes ampliada
+- [x] Filtro por status
+- [x] Cobertura de testes ampliada
+- [x] Rate limiting no login
+- [x] Migrações com Flyway
 - [ ] Deploy em ambiente cloud
 
 ---
@@ -244,7 +295,6 @@ O acesso a endpoints administrativos é controlado via `@PreAuthorize`, com base
 
 **Rodrigo Franco Jorge**
 
-GitHub:  
 [![GitHub](https://img.shields.io/badge/GitHub-Rshinna-black?logo=github)](https://github.com/Rshinna)
 
 ---
